@@ -3,10 +3,8 @@ import * as http from 'http';
 import * as https from 'https';
 import { Duplex } from 'stream';
 import { EventEmitter } from 'events';
-import createDebug from 'debug';
 import promisify from './promisify';
 
-const debug = createDebug('agent-base');
 
 function isAgent(v: any): v is createAgent.AgentLike {
 	return Boolean(v) && typeof v.addRequest === 'function';
@@ -269,10 +267,7 @@ namespace createAgent {
 					// `socket` is actually an `http.Agent` instance, so
 					// relinquish responsibility for this `req` to the Agent
 					// from here on
-					debug(
-						'Callback returned another Agent instance %o',
-						socket.constructor.name
-					);
+					
 					(socket as createAgent.Agent).addRequest(req, opts);
 					return;
 				}
@@ -298,7 +293,6 @@ namespace createAgent {
 
 			if (!this.promisifiedCallback) {
 				if (this.callback.length >= 3) {
-					debug('Converting legacy callback function to promise');
 					this.promisifiedCallback = promisify(this.callback);
 				} else {
 					this.promisifiedCallback = this.callback;
@@ -314,12 +308,8 @@ namespace createAgent {
 			}
 
 			try {
-				debug(
-					'Resolving socket for %o request: %o',
-					opts.protocol,
-					`${req.method} ${req.path}`
-				);
-				Promise.resolve(this.promisifiedCallback(req, opts)).then(
+				
+				this.promisifiedCallback &&Promise.resolve(this.promisifiedCallback(req, opts)).then(
 					onsocket,
 					callbackError
 				);
@@ -329,12 +319,10 @@ namespace createAgent {
 		}
 
 		freeSocket(socket: net.Socket, opts: AgentOptions) {
-			debug('Freeing socket %o %o', socket.constructor.name, opts);
 			socket.destroy();
 		}
 
 		destroy() {
-			debug('Destroying agent %o', this.constructor.name);
 		}
 	}
 
@@ -342,4 +330,4 @@ namespace createAgent {
 	createAgent.prototype = createAgent.Agent.prototype;
 }
 
-export = createAgent;
+export  { createAgent }
